@@ -28,11 +28,11 @@ exports.matchStudentsToCompany = async (company) => {
             }
         });
 
-        // Add to eligible list if matches > 0 (or simply based on criteria)
-        // Adjusting constraint as "Only those students: can SEE the company can APPLY"
-        // Let's assume if they have matchedSkillsCount > 0, they are pushed, OR even 0 matches might be fine if criteria fit, but let's sort them.
+        // Require at least one matching skill if the company has specified required skills
+        if (company.jdSkills && company.jdSkills.length > 0 && matchedSkillsCount === 0) {
+            return; // Reject student if absolutely zero skills align
+        }
 
-        // Push anyway if eligible by criteria, but sort by match count
         eligibleStudents.push({
             student,
             matchedSkillsCount
@@ -57,4 +57,47 @@ exports.matchStudentsToCompany = async (company) => {
         // Send email
         await emailService.sendJobEligibilityEmail(item.student, company);
     }
+};
+
+exports.matchStudentToAllCompanies = async (student) => {
+    const PlacementDept = require('../models/PlacementDept');
+    const dept = await PlacementDept.findOne();
+    if (!dept) return;
+
+    // Check basic eligibility against all active companies sequentially
+    for (const company of dept.companies) {
+        if (company.cgpaCriteria !== undefined && company.cgpaCriteria !== null) {
+            if (student.cgpa < company.cgpaCriteria) continue;
+        }
+
+        if (company.backlog !== undefined && company.backlog !== null) {
+            if (company.backlog === false && student.backlogs === true) continue;
+        }
+
+        if (company.branchesAllowed && company.branchesAllowed.length > 0 && !company.branchesAllowed.includes(student.branch)) {
+            continue;
+        }
+
+        // Skill parsing
+        const studentSkills = new Set((student.skills || []).map(s => s.toLowerCase()));
+        let matchedSkillsCount = 0;
+        company.jdSkills.forEach(skill => {
+            if (studentSkills.has(skill.toLowerCase())) {
+                matchedSkillsCount++;
+            }
+        });
+
+        // Require at least 1 matching skill
+        if (company.jdSkills && company.jdSkills.length > 0 && matchedSkillsCount === 0) {
+            continue;
+        }
+
+        // Student passes all hard constraints for this company, mark eligible.
+        // Prevent duplicate pushes if re-run natively
+        if (!student.eligibleCompanies.includes(company._id)) {
+             student.eligibleCompanies.push(company._id);
+        }
+    }
+
+    await student.save({ validateBeforeSave: false });
 };

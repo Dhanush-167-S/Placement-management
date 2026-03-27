@@ -11,6 +11,7 @@ router.use(role.restrictTo('admin'));
 
 router.post('/companies', placementDeptController.addCompany);
 router.post('/companies/:companyId/select', placementDeptController.selectStudents);
+router.get('/active-drives', placementDeptController.getActiveDrives);
 router.get('/company-history', placementDeptController.getCompanyHistory);
 
 module.exports = router;

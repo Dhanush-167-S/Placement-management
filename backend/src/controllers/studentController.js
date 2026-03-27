@@ -24,19 +24,24 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 
 exports.getEligibleCompanies = catchAsync(async (req, res, next) => {
     const student = await Student.findById(req.user.id);
+    const dept = await PlacementDept.findOne();
 
-    // In placementDept, find companies where _id is in student.eligibleCompanies
-    const dept = await PlacementDept.findOne({}, {
-        companies: {
-            $elemMatch: { _id: { $in: student.eligibleCompanies } }
-        }
-    });
+    if (!dept || !student.eligibleCompanies || student.eligibleCompanies.length === 0) {
+        return res.status(200).json({
+            status: 'success',
+            data: {
+                companies: []
+            }
+        });
+    }
+
+    const eligibleIds = student.eligibleCompanies.map(id => id.toString());
+    const matchedCompanies = dept.companies.filter(c => eligibleIds.includes(c._id.toString()));
 
     res.status(200).json({
         status: 'success',
         data: {
-            // Because of the single document design, we extract companies out
-            companies: dept ? dept.companies : []
+            companies: matchedCompanies
         }
     });
 });

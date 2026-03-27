@@ -59,3 +59,10 @@ export const useCompanyHistory = () => {
     queryFn: adminApi.getCompanyHistory
   });
 };
+
+export const useActiveDrives = () => {
+  return useQuery({
+    queryKey: ['active-drives'],
+    queryFn: adminApi.getActiveDrives
+  });
+};
