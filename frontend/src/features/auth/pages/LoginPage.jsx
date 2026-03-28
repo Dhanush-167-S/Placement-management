@@ -22,7 +22,7 @@ const LoginPage = () => {
         <div className="md:w-1/2 p-8 md:p-12 bg-gradient-to-br from-surface to-surface-raised flex flex-col justify-center relative overflow-hidden border-r border-border/30">
           <div className="absolute top-0 right-0 w-64 h-64 bg-accent-primary/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent-admin/10 rounded-full blur-3xl pointer-events-none" />
-          
+
           <div ref={leftPanelRef} className="relative z-10 space-y-8">
             <div className="flex items-center space-x-3 mb-12">
               <div className="w-10 h-10 rounded-xl bg-accent-primary flex items-center justify-center shadow-lg shadow-accent-primary/20">
@@ -42,16 +42,7 @@ const LoginPage = () => {
               The premium platform bridging top talent from our institution with leading global companies.
             </p>
 
-            <div className="flex space-x-6 pt-8 border-t border-border/50">
-              <div>
-                <div className="text-2xl font-bold text-white">94%</div>
-                <div className="text-xs text-text-muted mt-1 tracking-wider uppercase font-medium">Placement Rate</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-white">250+</div>
-                <div className="text-xs text-text-muted mt-1 tracking-wider uppercase font-medium">Partner Companies</div>
-              </div>
-            </div>
+
           </div>
         </div>
 
