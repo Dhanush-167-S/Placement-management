@@ -7,7 +7,19 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { gsap } from '../../../animations/gsap.config';
 import { Link } from 'react-router-dom';
 
-const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#F43F5E'];
+const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#F43F5E', '#8B5CF6', '#EC4899', '#0EA5E9'];
+
+const renderCustomizedLabel = ({ cx, cy, midAngle, outerRadius, percent, name, value }) => {
+  const RADIAN = Math.PI / 180;
+  const radius = outerRadius * 1.15;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="#94A3B8" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize="11px">
+      {`${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+    </text>
+  );
+};
 
 const AdminDashboard = () => {
   const { data } = useCompanyHistory();
@@ -16,7 +28,7 @@ const AdminDashboard = () => {
 
   const history = data?.data?.history || [];
   
-  const totalStudents = 320; 
+  const totalStudents = data?.data?.totalStudents || 0; 
   const companiesAdded = history.length;
   const studentsPlaced = history.reduce((acc, c) => acc + (c.numberOfStudentsPlaced || 0), 0);
   const placementRate = totalStudents > 0 ? Math.round((studentsPlaced / totalStudents) * 100) : 0;
@@ -26,12 +38,16 @@ const AdminDashboard = () => {
     placed: c.numberOfStudentsPlaced || 0
   })).slice(0, 5);
 
-  const pieData = [
-    { name: 'Computer Science', value: 140 },
-    { name: 'Information Sci', value: 80 },
-    { name: 'Electronics', value: 60 },
-    { name: 'Mechanical', value: 40 }
-  ];
+  const rawPieData = data?.data?.departmentSpread || [];
+  const pieDataMap = rawPieData.reduce((acc, curr) => {
+    const name = curr.name ? curr.name.toUpperCase() : 'UNKNOWN';
+    if (!acc[name]) {
+      acc[name] = { ...curr, name, value: 0 };
+    }
+    acc[name].value += (curr.value || 0);
+    return acc;
+  }, {});
+  const pieData = Object.values(pieDataMap);
 
   useEffect(() => {
     if (chartsRef.current) {
@@ -98,7 +114,7 @@ const AdminDashboard = () => {
           <h3 className="text-lg font-bold text-light mb-6">Department Placement Spread</h3>
           <ResponsiveContainer width="100%" height="80%">
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={80} outerRadius={110} paddingAngle={5} dataKey="value" stroke="none" animationBegin={500} animationDuration={1200} animationEasing="ease-out">
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value" stroke="none" animationBegin={500} animationDuration={1200} animationEasing="ease-out" label={renderCustomizedLabel} labelLine={{ stroke: '#1E2633', strokeWidth: 1 }}>
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}

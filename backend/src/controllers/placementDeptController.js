@@ -193,11 +193,25 @@ exports.getCompanyHistory = catchAsync(async (req, res, next) => {
             };
         });
 
+    const totalStudents = await Student.countDocuments();
+
+    const departmentSpreadRaw = await Alumni.aggregate([
+        { $group: { _id: "$studentData.branch", count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+    ]);
+
+    const departmentSpread = departmentSpreadRaw.map(item => ({
+        name: item._id || 'Other',
+        value: item.count
+    }));
+
     res.status(200).json({
         status: 'success',
         results: history.length,
         data: {
-            history
+            history,
+            totalStudents,
+            departmentSpread
         }
     });
 });
