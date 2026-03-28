@@ -23,6 +23,10 @@ const alumniSchema = new mongoose.Schema({
     appRole: {
         type: String,
         default: 'alumni'
+    },
+    hasProvidedFeedback: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

@@ -9,9 +9,12 @@ const CompanyCard = ({ company, onClickFeedback }) => {
   const { user } = useAuthStore();
   const { mutate: apply, isPending } = useApplyToCompany();
 
-  const userSkills = user?.skills?.map(s => s.toLowerCase()) || [];
-  const hasRequiredSkill = company.jdSkills?.some(skill => userSkills.includes(skill.toLowerCase()));
-  const isEligible = user?.cgpa >= company.cgpaCriteria && hasRequiredSkill;
+  const userSkills = user?.skills?.map(s => s.trim().toLowerCase()) || [];
+  const hasRequiredSkill = company.jdSkills?.some(skill => userSkills.includes(skill.trim().toLowerCase()));
+  const userBranch = (user?.branch || '').trim().toLowerCase();
+  const hasAllowedBranch = !company.branchesAllowed || company.branchesAllowed.length === 0 || company.branchesAllowed.some(b => b.trim().toLowerCase() === userBranch);
+  const hasNoBacklogsIfRequired = company.backlog === false ? !user?.backlogs : true;
+  const isEligible = parseFloat(user?.cgpa || 0) >= parseFloat(company.cgpaCriteria || 0) && hasRequiredSkill && hasAllowedBranch && hasNoBacklogsIfRequired;
 
 
   const handleApply = () => { apply(company._id); };
@@ -65,20 +68,20 @@ const CompanyCard = ({ company, onClickFeedback }) => {
       </div>
 
       <div className="flex items-center space-x-3 pt-4 border-t border-neutral-700/50">
-        <button onClick={() => onClickFeedback(company._id)} className="flex-1 py-2.5 rounded-2xl bg-surface border border-neutral-700/50 text-light text-sm font-medium hover:bg-light/5 interactive">
+        <button onClick={() => onClickFeedback(company._id)} className="flex-1 h-11 rounded-2xl bg-surface border border-neutral-700/50 text-light text-sm font-medium hover:bg-light/5 interactive flex items-center justify-center transition-all">
           View Feedback
         </button>
         {hasApplied ? (
-           <button disabled className="flex-1 py-2.5 rounded-2xl bg-accent-teal/10 text-accent-teal border border-accent-teal/20 text-sm font-medium transition-all flex items-center justify-center">
+           <button disabled className="flex-1 h-11 rounded-2xl bg-accent-teal/10 text-accent-teal border border-accent-teal/20 text-sm font-medium transition-all flex items-center justify-center">
              Applied
            </button>
         ) : isExpired ? (
-           <button disabled className="flex-1 py-2.5 rounded-2xl bg-accent-red/10 text-accent-red border border-accent-red/20 text-sm font-medium transition-all flex items-center justify-center cursor-not-allowed">
+           <button disabled className="flex-1 h-11 rounded-2xl bg-accent-red/10 text-accent-red border border-accent-red/20 text-sm font-medium transition-all flex items-center justify-center cursor-not-allowed">
              <AlertCircle className="w-4 h-4 mr-2" />
-             Deadline Passed
+             Closed
            </button>
         ) : (
-          <button onClick={handleApply} disabled={!isEligible || isPending} className={cn("btn-primary flex-1", !isEligible && "bg-deep text-neutral-500 shadow-none hover:transform-none opacity-80 cursor-not-allowed", isPending && "opacity-70")}>
+          <button onClick={handleApply} disabled={!isEligible || isPending} className={cn("flex-1 h-11 rounded-2xl text-sm font-bold transition-all flex items-center justify-center interactive", !isEligible ? "bg-surface border border-neutral-700/50 text-neutral-500 cursor-not-allowed opacity-80" : "bg-gradient-to-r from-brand-violet to-indigo-600 text-light shadow-glow hover:shadow-glow-lg", isPending && "opacity-70")}>
             {isPending ? 'Applying...' : 'Apply Now'}
             {!isPending && isEligible && <ArrowRight className="w-4 h-4 ml-1" />}
           </button>

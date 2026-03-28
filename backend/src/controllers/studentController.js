@@ -26,33 +26,37 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 });
 
 exports.getEligibleCompanies = catchAsync(async (req, res, next) => {
-    const student = await Student.findById(req.user.id);
+    let student = await Student.findById(req.user.id);
     const dept = await PlacementDept.findOne();
 
-    if (!dept || !student.eligibleCompanies || student.eligibleCompanies.length === 0) {
+    if (!dept) {
         return res.status(200).json({
             status: 'success',
-            data: {
-                companies: []
-            }
+            data: { companies: [] }
         });
     }
 
+    // Force real-time sync of eligibility before returning
+    const matchingService = require('../services/matchingService');
+    await matchingService.evaluateStudentForExistingCompanies(student);
+    
+    // Fetch student again in case evaluateStudentForExistingCompanies updated the array
+    student = await Student.findById(req.user.id);
 
-    dept = await PlacementDept.findOne();
+    if (!student.eligibleCompanies || student.eligibleCompanies.length === 0) {
+        return res.status(200).json({
+            status: 'success',
+            data: { companies: [] }
+        });
+    }
 
-    // Fix: ObjectId strict equality bug bypassing filter
-    const eligibleCompanies = dept ? dept.companies.filter(c =>
+    const eligibleCompanies = dept.companies.filter(c =>
         student.eligibleCompanies.some(id => id.toString() === c._id.toString())
-    ) : [];
+    );
 
     res.status(200).json({
         status: 'success',
-        data: {
-
-            companies: eligibleCompanies
-
-        }
+        data: { companies: eligibleCompanies }
     });
 });
 
@@ -81,10 +85,10 @@ exports.applyToCompany = catchAsync(async (req, res, next) => {
     const company = dept.companies.id(companyId);
 
     // Calculate match
-    const studentSkills = new Set((student.skills || []).map(s => s.toLowerCase()));
+    const studentSkills = new Set((student.skills || []).map(s => s.trim().toLowerCase()));
     let matchedSkillsCount = 0;
     company.jdSkills.forEach(skill => {
-        if (studentSkills.has(skill.toLowerCase())) {
+        if (studentSkills.has(skill.trim().toLowerCase())) {
             matchedSkillsCount++;
         }
     });
