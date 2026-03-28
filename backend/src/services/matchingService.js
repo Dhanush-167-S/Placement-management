@@ -21,18 +21,18 @@ exports.matchStudentsToCompany = async (company) => {
             if (company.backlog === false && student.backlogs === true) return;
         }
 
-        // Case-insensitive branches check
+        // Case-insensitive & trimmed branches check
         if (company.branchesAllowed && company.branchesAllowed.length > 0) {
-            const branchesAllowedLC = company.branchesAllowed.map(b => b.toLowerCase());
-            if (!branchesAllowedLC.includes((student.branch || '').toLowerCase())) return;
+            const branchesAllowedLC = company.branchesAllowed.map(b => b.trim().toLowerCase());
+            if (!branchesAllowedLC.includes((student.branch || '').trim().toLowerCase())) return;
         }
 
         // Compare jdSkills vs student.skills
-        const studentSkills = new Set((student.skills || []).map(s => s.toLowerCase()));
+        const studentSkills = new Set((student.skills || []).map(s => s.trim().toLowerCase()));
         let matchedSkillsCount = 0;
 
         company.jdSkills.forEach(skill => {
-            if (studentSkills.has(skill.toLowerCase())) {
+            if (studentSkills.has(skill.trim().toLowerCase())) {
                 matchedSkillsCount++;
             }
         });
@@ -97,14 +97,14 @@ exports.evaluateStudentForExistingCompanies = async (student) => {
         }
 
         if (company.branchesAllowed && company.branchesAllowed.length > 0) {
-            const branchesAllowedLC = company.branchesAllowed.map(b => b.toLowerCase());
-            if (!branchesAllowedLC.includes((student.branch || '').toLowerCase())) continue;
+            const branchesAllowedLC = company.branchesAllowed.map(b => b.trim().toLowerCase());
+            if (!branchesAllowedLC.includes((student.branch || '').trim().toLowerCase())) continue;
         }
 
 
         let matchedSkillsCount = 0;
         company.jdSkills.forEach(skill => {
-            if (studentSkills.has(skill.toLowerCase())) {
+            if (studentSkills.has(skill.trim().toLowerCase())) {
                 matchedSkillsCount++;
             }
         });

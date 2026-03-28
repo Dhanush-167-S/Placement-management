@@ -16,10 +16,14 @@ const StudentDashboard = () => {
   const companies = companiesData?.data?.companies || [];
   
 
-  const userSkills = user?.skills?.map(s => s.toLowerCase()) || [];
+  const userSkills = user?.skills?.map(s => s.trim().toLowerCase()) || [];
+  const userBranch = (user?.branch || '').trim().toLowerCase();
+  
   const eligibleCount = companies.filter(c => {
-    const hasRequiredSkill = c.jdSkills?.some(skill => userSkills.includes(skill.toLowerCase()));
-    return user?.cgpa >= c.cgpaCriteria && hasRequiredSkill;
+    const hasRequiredSkill = c.jdSkills?.some(skill => userSkills.includes(skill.trim().toLowerCase()));
+    const hasAllowedBranch = !c.branchesAllowed || c.branchesAllowed.length === 0 || c.branchesAllowed.some(b => b.trim().toLowerCase() === userBranch);
+    const hasNoBacklogsIfRequired = c.backlog === false ? !user?.backlogs : true;
+    return parseFloat(user?.cgpa || 0) >= parseFloat(c.cgpaCriteria || 0) && hasRequiredSkill && hasAllowedBranch && hasNoBacklogsIfRequired;
   }).length;
 
   const appliedCount = user?.applications?.length || 0;

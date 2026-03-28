@@ -23,6 +23,12 @@ exports.addFeedback = catchAsync(async (req, res, next) => {
         return next(new AppError('Company not found in array', 404));
     }
     
+    // Prevent duplicate feedback from the same alumni
+    const alreadyGaveFeedback = company.feedbacks.some(fb => fb.alumniId.toString() === alumniId.toString());
+    if (alreadyGaveFeedback) {
+        return next(new AppError('You have already submitted feedback for this company.', 400));
+    }
+    
     company.feedbacks.push({
         alumniId,
         message,
@@ -30,6 +36,14 @@ exports.addFeedback = catchAsync(async (req, res, next) => {
     });
 
     await dept.save({ validateBeforeSave: false });
+
+    // Mark the alumni as having provided feedback
+    const AlumniModel = require('../models/Alumni');
+    const alumniUser = await AlumniModel.findById(alumniId);
+    if(alumniUser) {
+        alumniUser.hasProvidedFeedback = true;
+        await alumniUser.save({ validateBeforeSave: false });
+    }
 
     // Send email to admin
     await emailService.sendFeedbackNotification(dept.adminDetails.email, companyName);

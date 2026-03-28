@@ -21,6 +21,7 @@ const AlumniDashboard = () => {
     postFeedback({ message, rating }, {
       onSuccess: () => {
         setShowModal(false);
+        useAuthStore.setState((state) => ({ user: { ...state.user, hasProvidedFeedback: true } }));
         setMessage('');
         setRating(5);
       }
@@ -67,14 +68,21 @@ const AlumniDashboard = () => {
          </Link>
 
 
-         <button onClick={() => setShowModal(true)} className="glass-card p-6 flex items-center justify-between group cursor-pointer hover:bg-white/5 transition-colors border-emerald-500/20 shadow-[0_4px_20px_rgba(16,185,129,0.05)] text-left w-full focus:outline-none">
-
+         <button 
+           onClick={() => !user?.hasProvidedFeedback && setShowModal(true)} 
+           disabled={user?.hasProvidedFeedback}
+           className={cn("glass-card p-6 flex items-center justify-between group text-left w-full focus:outline-none transition-all", user?.hasProvidedFeedback ? "opacity-60 cursor-not-allowed border-neutral-700/50" : "cursor-pointer hover:bg-white/5 border-emerald-500/20 shadow-[0_4px_20px_rgba(16,185,129,0.05)]")}
+         >
             <div>
-              <h4 className="text-lg font-bold text-emerald-400 mb-2">Give Feedback</h4>
-              <p className="text-sm text-neutral-500">Review {user?.companyJoined || 'your company'} for juniors.</p>
+              <h4 className={cn("text-lg font-bold mb-2", user?.hasProvidedFeedback ? "text-neutral-400" : "text-emerald-400")}>
+                {user?.hasProvidedFeedback ? "Feedback Submitted" : "Give Feedback"}
+              </h4>
+              <p className="text-sm text-neutral-500">
+                {user?.hasProvidedFeedback ? "Thank you for helping your juniors!" : `Review ${user?.companyJoined || 'your company'} for juniors.`}
+              </p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-500/30 transition-all">
-               <Quote className="w-6 h-6 text-emerald-500" />
+            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all", user?.hasProvidedFeedback ? "bg-neutral-800" : "bg-emerald-500/20 group-hover:scale-110 group-hover:bg-emerald-500/30")}>
+               <Quote className={cn("w-6 h-6", user?.hasProvidedFeedback ? "text-neutral-500" : "text-emerald-500")} />
             </div>
          </button>
       </div>
